@@ -7,7 +7,6 @@ from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validat
 
 ANO_MINIMO = 1900
 
-# Preço sempre com duas casas decimais (ex.: 95000 vira 95000.00)
 Preco = Annotated[
     Decimal, Field(gt=0, max_digits=12, decimal_places=2), AfterValidator(lambda v: v.quantize(Decimal("0.01")))
 ]

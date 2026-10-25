@@ -1,5 +1,3 @@
-"""Regras de negócio da revenda. Os routers só traduzem HTTP para estas funções."""
-
 import secrets
 from datetime import UTC, datetime
 
@@ -13,8 +11,6 @@ from app.schemas import StatusPagamento, VeiculoEdicao, VeiculoEntrada
 
 
 class ErroNegocio(Exception):
-    """Erro de regra de negócio, com o status HTTP correspondente."""
-
     def __init__(self, mensagem: str, status_http: int) -> None:
         super().__init__(mensagem)
         self.mensagem = mensagem
@@ -68,12 +64,8 @@ def listar_veiculos(sessao: Session, status: StatusVeiculo) -> list[Veiculo]:
 
 
 def iniciar_compra(sessao: Session, veiculo_id: str, comprador_id: str) -> Venda:
-    """Reserva o veículo e cria a venda aguardando pagamento, na mesma transação.
-
-    A reserva é um UPDATE condicional: se dois compradores tentarem ao mesmo tempo,
-    só um altera a linha; o outro recebe 409.
-    """
     veiculo = obter_veiculo(sessao, veiculo_id)
+    # UPDATE condicional: em compras simultâneas só uma altera a linha, a outra recebe 409
     reservado = sessao.execute(
         update(Veiculo)
         .where(Veiculo.id == veiculo_id, Veiculo.status == StatusVeiculo.A_VENDA)
@@ -132,11 +124,7 @@ def cancelar_venda(sessao: Session, venda: Venda, motivo: MotivoCancelamento) ->
 
 
 def processar_pagamento(sessao: Session, codigo_pagamento: str, resultado: StatusPagamento) -> Venda:
-    """Efetiva ou cancela a venda conforme a notificação do gateway de pagamento.
-
-    Notificações repetidas com o mesmo resultado são idempotentes.
-    """
-    # Trava venda e veículo: duas notificações simultâneas são processadas uma de cada vez
+    # FOR UPDATE para não processar duas notificações da mesma venda ao mesmo tempo
     consulta = select(Venda).where(Venda.codigo_pagamento == codigo_pagamento).with_for_update()
     venda = sessao.scalar(consulta)
     if not venda:

@@ -1,10 +1,10 @@
-# Roteiro do vídeo (≈ 8 a 10 minutos)
+# Roteiro do vídeo (8 a 10 minutos)
 
-O enunciado pede: solução funcionando **na infraestrutura e no uso**, com teste início-a-fim (cadastro de cliente, veículo, compra e efetivação).
+O enunciado pede: solução funcionando na infraestrutura e no uso, com teste início-a-fim (cadastro de cliente, veículo, compra e efetivação).
 
 ## Preparação (antes de gravar)
 
-- [ ] Último deploy verde nos dois repositórios (Actions → CD).
+- [ ] Último deploy verde nos dois repositórios (Actions, workflow CD).
 - [ ] Abas abertas: GitHub (os dois repositórios), Actions, `http://<servidor>/docs`, `http://<servidor>/identidade/docs`, Grafana `http://<servidor>:3000`.
 - [ ] Terminal com SSH no servidor e outro local com o script de demonstração pronto.
 - [ ] Senhas do gestor e do webhook à mão (fora da tela).
@@ -24,6 +24,6 @@ O enunciado pede: solução funcionando **na infraestrutura e no uso**, com test
 | 8 | 7:00 | Grafana | Painel: veículos cadastrados, compras iniciadas/efetivadas/canceladas, tráfego, erros, latência e métricas do Kong geradas pela demonstração. |
 | 9 | 7:40 | Prometheus `/alerts` (via túnel SSH) ou arquivo de alertas | As 4 regras de alerta. |
 | 10 | 8:10 | ADRs e DAS | Principais decisões e evoluções (APM, Kubernetes, expiração de reserva). |
-| 11 | 8:40 | — | Encerramento. |
+| 11 | 8:40 | - | Encerramento. |
 
 > Prometheus não é exposto na internet. Para mostrá-lo: `ssh -L 9090:localhost:9090 ubuntu@<servidor>` e abrir `http://localhost:9090/alerts`.
