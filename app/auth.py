@@ -16,8 +16,6 @@ class Usuario:
 
 
 class VerificadorToken:
-    """Valida o JWT emitido pelo serviço de identidade (assinatura RS256, iss, aud, exp)."""
-
     def __init__(self, obter_chave: Callable[[str], Any], issuer: str, audience: str) -> None:
         self._obter_chave = obter_chave
         self._issuer = issuer

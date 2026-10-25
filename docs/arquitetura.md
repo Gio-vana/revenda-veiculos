@@ -1,6 +1,6 @@
 # Arquitetura
 
-Documentação no modelo **C4** (contexto, containers e componentes), mais a visão de implantação, a sequência da compra e o modelo de dados.
+Documentação no modelo C4 (contexto, containers e componentes), mais a visão de implantação, a sequência da compra e o modelo de dados.
 
 ## 1. Contexto (C4 nível 1)
 
@@ -61,7 +61,7 @@ flowchart LR
   graf --> prom
 ```
 
-**Isolamento de rede**: cada banco fica numa rede Docker `interna` do seu próprio projeto. Só as APIs, o Kong e o Prometheus compartilham a rede `revenda-net`. A revenda **não consegue** abrir conexão com o banco de identidade.
+Isolamento de rede: cada banco fica numa rede Docker `interna` do seu próprio projeto. Só as APIs, o Kong e o Prometheus compartilham a rede `revenda-net`. A revenda não consegue abrir conexão com o banco de identidade.
 
 ## 3. Componentes da revenda-api (C4 nível 3)
 
@@ -114,7 +114,7 @@ flowchart TB
   internet --> g
 ```
 
-Os dois repositórios fazem deploy no mesmo servidor, cada um em sua pasta e projeto Compose, com `.env` próprio gerado a partir dos *secrets* do respectivo repositório.
+Os dois repositórios fazem deploy no mesmo servidor, cada um em sua pasta e projeto Compose, com `.env` próprio gerado a partir dos secrets do respectivo repositório.
 
 ## 5. Sequência: compra e efetivação
 

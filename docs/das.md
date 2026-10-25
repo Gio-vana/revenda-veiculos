@@ -2,16 +2,16 @@
 
 | Campo | Conteúdo |
 |---|---|
-| **Projeto** | Plataforma de vendas online da revenda de veículos: API |
-| **Versão do desenho** | 1.0 |
-| **Responsável** | Giovana de Fatima Moraes, RM 366418 |
-| **Repositórios** | `revenda-veiculos` (API, gateway, monitoramento) e `revenda-identidade` (identidade) |
+| Projeto | Plataforma de vendas online da revenda de veículos: API |
+| Versão do desenho | 1.0 |
+| Responsável | Giovana de Fatima Moraes, RM 366418 |
+| Repositórios | `revenda-veiculos` (API, gateway, monitoramento) e `revenda-identidade` (identidade) |
 
 ## 1. Escopo
 
-**Dentro:** cadastro e edição de veículos; cadastro e autenticação de compradores em serviço apartado; compra pela internet com efetivação por pagamento; listagens de veículos à venda e vendidos ordenadas por preço; API Gateway; monitoramento; CI/CD com PR e deploy automatizado.
+Dentro: cadastro e edição de veículos; cadastro e autenticação de compradores em serviço apartado; compra pela internet com efetivação por pagamento; listagens de veículos à venda e vendidos ordenadas por preço; API Gateway; monitoramento; CI/CD com PR e deploy automatizado.
 
-**Fora:** front-end (outro time), integração com gateway de pagamento real (simulado por webhook), recuperação de senha e MFA, expiração automática de reservas, notificações por e-mail.
+Fora: front-end (outro time), integração com gateway de pagamento real (simulado por webhook), recuperação de senha e MFA, expiração automática de reservas, notificações por e-mail.
 
 ## 2. Desenho de alto nível (HLD)
 
@@ -46,7 +46,7 @@ Dois serviços FastAPI independentes, cada um com seu PostgreSQL, atrás de um A
 |---|---|---|
 | VM única fora do ar | Plataforma indisponível | `restart: unless-stopped`, healthchecks, alerta `ServicoFora`; evolução para ECS/EKS |
 | Reserva pendente sem pagamento | Veículo fica indisponível | Cancelamento pela loja ou pelo comprador; evolução: expiração automática |
-| Vazamento do segredo do webhook | Efetivações falsas | Segredo só em *secrets*; evolução: assinatura HMAC do corpo |
+| Vazamento do segredo do webhook | Efetivações falsas | Segredo só em secrets; evolução: assinatura HMAC do corpo |
 | Perda da chave de assinatura do JWT | Tokens emitidos deixam de valer | Chave em volume persistente; usuários só precisam logar de novo |
 
 ## 6. Custos estimados
