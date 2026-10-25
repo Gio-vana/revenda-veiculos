@@ -51,11 +51,9 @@ class Veiculo(Base):
 
 
 class Venda(Base):
-    """Venda de um veículo. Do comprador guarda só o id opaco (claim `sub` do token)."""
-
     __tablename__ = "vendas"
     __table_args__ = (
-        # No máximo uma venda ativa (não cancelada) por veículo, garantido pelo banco
+        # garante no banco que o veículo tem no máximo uma venda não cancelada
         Index(
             "ux_vendas_veiculo_ativa",
             "veiculo_id",
