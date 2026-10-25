@@ -1,0 +1,75 @@
+name: CD
+
+# Implanta no servidor a cada merge na main (ou manualmente), depois de o CI passar.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-revenda-veiculos
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    name: Deploy no servidor
+    needs: ci
+    runs-on: ubuntu-latest
+    environment: producao
+    env:
+      DESTINO: ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
+      PASTA: revenda-veiculos
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configura acesso SSH
+        run: |
+          install -m 700 -d ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+          printf "Host alvo\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/id_deploy\n" \
+            "${{ secrets.SSH_HOST }}" "${{ secrets.SSH_USER }}" > ~/.ssh/config
+
+      - name: Copia o código para o servidor
+        run: rsync -az --delete --exclude .git --exclude .env ./ "alvo:$PASTA/"
+
+      - name: Grava o .env com os segredos do GitHub
+        env:
+          REVENDA_DB_PASSWORD: ${{ secrets.REVENDA_DB_PASSWORD }}
+          WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
+          GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
+        run: |
+          printf 'REVENDA_DB_PASSWORD=%s\nWEBHOOK_SECRET=%s\nGRAFANA_ADMIN_PASSWORD=%s\nGATEWAY_PORT=80\nGRAFANA_PORT=3000\nIMAGE_TAG=%s\n' \
+            "$REVENDA_DB_PASSWORD" "$WEBHOOK_SECRET" "$GRAFANA_ADMIN_PASSWORD" "${GITHUB_SHA::7}" \
+            | ssh alvo "umask 077 && cat > $PASTA/.env"
+
+      - name: Sobe os containers
+        run: |
+          ssh alvo "cd $PASTA && docker network inspect revenda-net >/dev/null 2>&1 || docker network create revenda-net"
+          ssh alvo "cd $PASTA && docker compose up -d --build --remove-orphans && docker image prune -f"
+
+      - name: Teste de fumaça pelo API Gateway
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS "http://${{ secrets.SSH_HOST }}/api/v1/veiculos/a-venda" > /dev/null; then
+              echo "API respondendo pelo gateway"; exit 0
+            fi
+            sleep 5
+          done
+          ssh alvo "cd $PASTA && docker compose ps && docker compose logs --tail 50 revenda-api kong"
+          exit 1
+
+      - name: Resumo
+        run: |
+          {
+            echo "### Deploy concluído (${GITHUB_SHA::7})"
+            echo "- API Gateway: http://${{ secrets.SSH_HOST }}/docs"
+            echo "- Grafana: http://${{ secrets.SSH_HOST }}:3000"
+          } >> "$GITHUB_STEP_SUMMARY"

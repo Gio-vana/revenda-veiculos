@@ -1,0 +1,46 @@
+# Configuração declarativa do API Gateway (Kong em modo DB-less).
+# Único ponto de entrada HTTP público da plataforma.
+_format_version: "3.0"
+
+services:
+  - name: revenda-api
+    url: http://revenda-api:8000
+    routes:
+      - name: revenda
+        paths: [/api, /docs, /openapi.json]
+        strip_path: false
+      # Compra tem limite mais restrito por IP
+      - name: compra
+        paths: [/api/v1/vendas]
+        methods: [POST]
+        strip_path: false
+        plugins:
+          - name: rate-limiting
+            config: { minute: 30, policy: local, limit_by: ip }
+
+  - name: identidade-api
+    url: http://identidade-api:8000
+    routes:
+      # /identidade/auth/login -> http://identidade-api:8000/auth/login
+      - name: identidade
+        paths: [/identidade]
+        strip_path: true
+        plugins:
+          - name: rate-limiting
+            config: { minute: 60, policy: local, limit_by: ip }
+      # Métricas internas não são publicadas pelo gateway
+      - name: identidade-metricas-bloqueadas
+        paths: [/identidade/metrics]
+        plugins:
+          - name: request-termination
+            config: { status_code: 404, message: "Not Found" }
+
+plugins:
+  - name: correlation-id
+    config: { header_name: X-Request-ID, generator: uuid, echo_downstream: true }
+  - name: request-size-limiting
+    config: { allowed_payload_size: 1, size_unit: megabytes }
+  - name: rate-limiting
+    config: { minute: 300, policy: local, limit_by: ip }
+  - name: prometheus
+    config: { status_code_metrics: true, latency_metrics: true, per_consumer: false }
