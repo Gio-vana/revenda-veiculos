@@ -1,0 +1,98 @@
+# API da revenda + banco transacional + API Gateway (Kong) + monitoramento.
+# O serviço de identidade (outro repositório) entra na mesma rede "revenda-net";
+# o banco de identidade NÃO é alcançável daqui.
+name: revenda-veiculos
+
+services:
+  revenda-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: revenda
+      POSTGRES_USER: revenda
+      POSTGRES_PASSWORD: ${REVENDA_DB_PASSWORD:?defina REVENDA_DB_PASSWORD no .env}
+    volumes:
+      - revenda-db:/var/lib/postgresql/data
+    networks: [interna]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U revenda -d revenda"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  revenda-api:
+    build: .
+    image: revenda-api:${IMAGE_TAG:-local}
+    restart: unless-stopped
+    depends_on:
+      revenda-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://revenda:${REVENDA_DB_PASSWORD}@revenda-db:5432/revenda
+      JWKS_URL: http://identidade-api:8000/.well-known/jwks.json
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:?defina WEBHOOK_SECRET no .env}
+    networks: [interna, revenda-net]
+
+  kong:
+    image: kong:3.9
+    restart: unless-stopped
+    depends_on: [revenda-api]
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/kong.yml
+      KONG_PROXY_LISTEN: 0.0.0.0:8000
+      KONG_STATUS_LISTEN: 0.0.0.0:8100
+      KONG_ADMIN_LISTEN: "off"
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+    volumes:
+      - ./infra/kong/kong.yml:/kong/kong.yml:ro
+    ports:
+      - "${GATEWAY_PORT:-8080}:8000"
+    networks: [revenda-net]
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=7d
+    volumes:
+      - ./infra/prometheus:/etc/prometheus:ro
+      - prometheus:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    networks: [revenda-net]
+
+  grafana:
+    image: grafana/grafana:11.5.2
+    restart: unless-stopped
+    depends_on: [prometheus]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?defina GRAFANA_ADMIN_PASSWORD no .env}
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/revenda.json
+      GF_USERS_DEFAULT_LANGUAGE: pt-BR
+    volumes:
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana:/var/lib/grafana
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    networks: [revenda-net]
+
+volumes:
+  revenda-db:
+  prometheus:
+  grafana:
+
+networks:
+  interna:
+  revenda-net:
+    external: true
