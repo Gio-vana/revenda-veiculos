@@ -5,6 +5,18 @@ Autor(a): Giovana de Fatima Moraes, RM _<seu RM>_
 
 > **A entrega tem dois repositórios.** Este é o da **API da revenda** (veículos, vendas e pagamento), com o API Gateway e o monitoramento. O cadastro e a autenticação de compradores ficam no **serviço de identidade**, totalmente apartado: [revenda-identidade](https://github.com/Gio-vana/revenda-identidade).
 
+## Ambiente publicado
+
+| O quê | Endereço |
+|---|---|
+| Swagger da API (pelo API Gateway) | http://34.202.251.69/docs |
+| Swagger da identidade | http://34.202.251.69/identidade/docs |
+| Veículos à venda | http://34.202.251.69/api/v1/veiculos/a-venda |
+| Veículos vendidos | http://34.202.251.69/api/v1/veiculos/vendidos |
+| Painel do Grafana (leitura anônima) | http://34.202.251.69:3000 |
+
+Disponível até 15/12/2026.
+
 ## Sumário
 
 1. [O que é](#1-o-que-é)
