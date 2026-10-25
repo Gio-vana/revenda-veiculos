@@ -1,7 +1,7 @@
 # Revenda de Veículos: API
 
 Trabalho Substitutivo do Tech Challenge, FIAP PósTech Software Architecture (SOAT), Fase 3.
-Autor(a): Giovana de Fatima Moraes, RM _<seu RM>_
+Autor(a): Giovana de Fatima Moraes, RM 366418
 
 > **A entrega tem dois repositórios.** Este é o da **API da revenda** (veículos, vendas e pagamento), com o API Gateway e o monitoramento. O cadastro e a autenticação de compradores ficam no **serviço de identidade**, totalmente apartado: [revenda-identidade](https://github.com/Gio-vana/revenda-identidade).
 

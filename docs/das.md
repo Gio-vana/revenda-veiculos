@@ -4,7 +4,7 @@
 |---|---|
 | **Projeto** | Plataforma de vendas online da revenda de veículos: API |
 | **Versão do desenho** | 1.0 |
-| **Responsável** | Giovana de Fatima Moraes, RM _<seu RM>_ |
+| **Responsável** | Giovana de Fatima Moraes, RM 366418 |
 | **Repositórios** | `revenda-veiculos` (API, gateway, monitoramento) e `revenda-identidade` (identidade) |
 
 ## 1. Escopo
